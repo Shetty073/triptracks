@@ -1,0 +1,643 @@
+{
+  "info": {
+    "name": "TripTracks API",
+    "description": "Comprehensive Postman collection for the TripTracks application backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication algorithms",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"securepassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "testuser",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "securepassword123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"your_refresh_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User Profile and Settings",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distance_unit\": \"km\",\n  \"currency\": \"USD\",\n  \"default_daily_food_cost\": 50.0,\n  \"default_daily_stay_cost\": 150.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "preferences"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota RAV4\",\n  \"type\": \"car\",\n  \"avg_distance_per_day\": 400.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "vehicles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/vehicles/vehicle_id_here",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "vehicles",
+                "vehicle_id_here"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crew",
+      "description": "managing friends and crews",
+      "item": [
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crew/search?query=test",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "crew",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "test"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Crew Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crew/request?target_user_id=target_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "crew",
+                "request"
+              ],
+              "query": [
+                {
+                  "key": "target_user_id",
+                  "value": "target_id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept Crew Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crew/accept?request_id=request_id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "crew",
+                "accept"
+              ],
+              "query": [
+                {
+                  "key": "request_id",
+                  "value": "request_id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Crew",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crew/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "crew",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Trip lifecycle and intelligence",
+      "item": [
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"California Road Trip\",\n  \"source\": {\"name\": \"San Francisco\", \"lat\": 37.77, \"lng\": -122.41},\n  \"destination\": {\"name\": \"Los Angeles\", \"lat\": 34.05, \"lng\": -118.24}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trips/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Specific Trip",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trips/trip_id_here",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "trip_id_here"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Categorized Trips",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trips/user/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "user",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Trip Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trips/trip_id_here/status?status=in_progress",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "trip_id_here",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "in_progress"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Completed Trips Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trips/feed/completed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "feed",
+                "completed"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Autocomplete Locations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trips/autocomplete?query=San F",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "autocomplete"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "San F"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Intelligence Route Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": {\"name\": \"San Francisco, CA, USA\", \"lat\": 37.7749, \"lng\": -122.4194},\n  \"destination\": {\"name\": \"Los Angeles, CA, USA\", \"lat\": 34.0522, \"lng\": -118.2437},\n  \"stops\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trips/intelligence/plan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "intelligence",
+                "plan"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Gas\",\n  \"amount\": 40.5,\n  \"paid_by\": \"user_id\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trips/trip_id_here/expenses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "trip_id_here",
+                "expenses"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Wow what a cool trip!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trips/trip_id_here/comments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trips",
+                "trip_id_here",
+                "comments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Live Trip Chat (WebSocket)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "ws://localhost:8000/ws/trips/trip_id_here?user_id=user_id_here&username=my_username",
+              "protocol": "ws",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "ws",
+                "trips",
+                "trip_id_here"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "user_id_here"
+                },
+                {
+                  "key": "username",
+                  "value": "my_username"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
