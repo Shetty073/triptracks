@@ -105,9 +105,44 @@ async def accept_request(request_id: str, current_user: UserDB = Depends(get_cur
 
 @router.get("/")
 async def get_my_crew(current_user: UserDB = Depends(get_current_user)):
-    # Include both crew_ids and current_user's own id
-    member_ids = current_user.crew_ids + [current_user.id]
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    crew_ids = current_user.crew_ids or []
+    # Ensure current user is included
+    member_ids = list(set([str(cid) for cid in crew_ids] + [str(current_user.id)]))
+    
+    logger.info(f"get_my_crew: ID search list: {member_ids}")
+    
     cursor = db.db["users"].find({"id": {"$in": member_ids}})
-    crew = await cursor.to_list(length=100)
-    # Return limited info for crew (no hashed passwords etc.)
-    return [UserDB(**member).dict(exclude={"hashed_password"}) for member in crew]
+    db_members = await cursor.to_list(length=100)
+    
+    logger.info(f"get_my_crew: Found {len(db_members)} members in DB")
+    
+    # We want to return a list of UserDB-compatible dicts
+    result = []
+    found_me = False
+    
+    for member in db_members:
+        try:
+            user_obj = UserDB(**member)
+            d = user_obj.dict(exclude={"hashed_password"})
+            is_me = (user_obj.id == current_user.id)
+            d["is_me"] = is_me
+            if is_me:
+                found_me = True
+            
+            v_count = len(user_obj.profile_settings.vehicles)
+            logger.info(f"User {user_obj.username} (id={user_obj.id}, is_me={is_me}) has {v_count} vehicles")
+            result.append(d)
+        except Exception as e:
+            logger.error(f"Error parsing user {member.get('username')}: {e}")
+
+    # Fallback: if current_user wasn't found in DB (unlikely but safe)
+    if not found_me:
+        logger.warning(f"Current user {current_user.id} not found in DB cursor! Adding from session.")
+        d = current_user.dict(exclude={"hashed_password"})
+        d["is_me"] = True
+        result.insert(0, d)
+        
+    return result

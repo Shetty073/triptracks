@@ -27,6 +27,7 @@ class CrewMemberForTrip {
   final String username;
   final String email;
   final String? fullName;
+  final bool isMe;
   final List<VehicleOption> vehicles;
 
   CrewMemberForTrip({
@@ -34,6 +35,7 @@ class CrewMemberForTrip {
     required this.username,
     required this.email,
     this.fullName,
+    this.isMe = false,
     required this.vehicles,
   });
 
@@ -49,6 +51,7 @@ class CrewMemberForTrip {
       username: json['username'],
       email: json['email'],
       fullName: json['full_name'],
+      isMe: json['is_me'] ?? false,
       vehicles: vehicleList,
     );
   }

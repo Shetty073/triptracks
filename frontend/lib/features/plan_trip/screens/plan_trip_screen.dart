@@ -110,8 +110,13 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
         for (final v in m.vehicles) { byId[v.id] = v; }
       }
       if (mounted) {
+        debugPrint('Loaded crew: ${crew.length} members');
+        for (final m in crew) {
+          debugPrint(' - ${m.displayName} (id: ${m.id}) Vehicles: ${m.vehicles.length}');
+        }
         setState(() {
           _crewList = crew;
+          _allVehiclesById.clear();
           _allVehiclesById.addAll(byId);
           _crewLoaded = true;
         });
@@ -487,7 +492,7 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
         CheckboxListTile(
           value: isSelected,
           activeColor: primary,
-          title: Text(member.displayName,
+          title: Text(member.isMe ? '${member.displayName} (Me)' : member.displayName,
               style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text(member.email, style: const TextStyle(fontSize: 12)),
           secondary: CircleAvatar(
@@ -514,12 +519,12 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
             const SizedBox(height: 10),
 
             // Vehicle picker
-            if (member.vehicles.isEmpty)
+            if (_allVehiclesById.isEmpty)
               Row(children: [
                 Icon(Icons.directions_car_outlined,
                     size: 16, color: Colors.grey.shade500),
                 const SizedBox(width: 6),
-                Text('No vehicles registered',
+                Text('No vehicles registered by any member',
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
               ])
             else
@@ -535,17 +540,25 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
                 hint: const Text('Select vehicle'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('No vehicle')),
-                  ...member.vehicles.map((v) {
+                  ..._allVehiclesById.values.map((v) {
                     final occ = _getOccupancy(v.id, excludeUserId: member.id);
                     final isFull = occ >= v.seats;
+                    // Find owner name for this vehicle
+                    final owner = _crewList.firstWhere(
+                      (m) => m.vehicles.any((vv) => vv.id == v.id),
+                      orElse: () => member,
+                    );
+                    final ownerLabel = owner.id == member.id ? 'You' : owner.displayName;
+
                     return DropdownMenuItem(
                       value: isFull ? null : v.id,
                       enabled: !isFull,
                       child: Text(
-                        '${v.displayLabel} ($occ/${v.seats} seats)',
+                        '${v.name} ($ownerLabel) • $occ/${v.seats} seats',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: isFull ? Colors.grey : null,
+                          fontSize: 13,
                         ),
                       ),
                     );
