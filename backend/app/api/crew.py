@@ -105,7 +105,9 @@ async def accept_request(request_id: str, current_user: UserDB = Depends(get_cur
 
 @router.get("/")
 async def get_my_crew(current_user: UserDB = Depends(get_current_user)):
-    cursor = db.db["users"].find({"id": {"$in": current_user.crew_ids}})
+    # Include both crew_ids and current_user's own id
+    member_ids = current_user.crew_ids + [current_user.id]
+    cursor = db.db["users"].find({"id": {"$in": member_ids}})
     crew = await cursor.to_list(length=100)
     # Return limited info for crew (no hashed passwords etc.)
     return [UserDB(**member).dict(exclude={"hashed_password"}) for member in crew]

@@ -224,6 +224,15 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
     return null;
   }
 
+  int _getOccupancy(String vehicleId, {String? excludeUserId}) {
+    int count = 0;
+    for (final uid in _selectedCrewIds) {
+      if (uid == excludeUserId) continue;
+      if (_selectedVehicle[uid] == vehicleId) count++;
+    }
+    return count;
+  }
+
   // ─── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -526,10 +535,21 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
                 hint: const Text('Select vehicle'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('No vehicle')),
-                  ...member.vehicles.map((v) => DropdownMenuItem(
-                    value: v.id,
-                    child: Text(v.displayLabel, overflow: TextOverflow.ellipsis),
-                  )),
+                  ...member.vehicles.map((v) {
+                    final occ = _getOccupancy(v.id, excludeUserId: member.id);
+                    final isFull = occ >= v.seats;
+                    return DropdownMenuItem(
+                      value: isFull ? null : v.id,
+                      enabled: !isFull,
+                      child: Text(
+                        '${v.displayLabel} ($occ/${v.seats} seats)',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isFull ? Colors.grey : null,
+                        ),
+                      ),
+                    );
+                  }),
                 ],
                 onChanged: (vid) => setState(() {
                   _selectedVehicle[member.id] = vid;
