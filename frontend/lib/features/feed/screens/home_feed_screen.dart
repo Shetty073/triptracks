@@ -64,36 +64,69 @@ class _PublicFeedWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final feedAsync = ref.watch(publicFeedProvider);
-    return feedAsync.when(
-      data: (trips) {
-        if (trips.isEmpty) {
-          return const Center(
-            child: Text("No public trips found. Plan one today!"),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () async => ref.refresh(publicFeedProvider),
-          child: ListView.builder(
-            itemCount: trips.length,
-            itemBuilder: (context, index) {
-              return TripCard(
-                trip: trips[index],
-                onViewMore: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (c) =>
-                          TripDetailsScreen(tripId: trips[index].id),
-                    ),
-                  );
+    final searchController = TextEditingController(
+      text: ref.read(feedSearchQueryProvider),
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: searchController,
+            decoration: InputDecoration(
+              hintText: 'Search trips or destinations...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  searchController.clear();
+                  ref.read(feedSearchQueryProvider.notifier).updateQuery('');
                 },
-              );
+              ),
+            ),
+            onSubmitted: (value) {
+              ref.read(feedSearchQueryProvider.notifier).updateQuery(value);
             },
           ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => Center(child: Text("Error loading feed: $err")),
+        ),
+        Expanded(
+          child: feedAsync.when(
+            data: (trips) {
+              if (trips.isEmpty) {
+                return const Center(
+                  child: Text("No public trips found. Plan one today!"),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async => ref.refresh(publicFeedProvider),
+                child: ListView.builder(
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    return TripCard(
+                      trip: trips[index],
+                      onViewMore: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) =>
+                                TripDetailsScreen(tripId: trips[index].id),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, st) => Center(child: Text("Error loading feed: $err")),
+          ),
+        ),
+      ],
     );
   }
 }

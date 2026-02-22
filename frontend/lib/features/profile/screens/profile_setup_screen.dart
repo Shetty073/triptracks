@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/profile/providers/profile_provider.dart';
+import 'package:frontend/core/auth_provider.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -10,22 +11,34 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  final _usernameController = TextEditingController();
   final _foodExpenseController = TextEditingController();
   final _stayExpenseController = TextEditingController();
   String _distanceUnit = 'km';
   String _currency = 'USD';
+  String _themeMode = 'system';
+  String _accentColor = 'deepPurple';
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _foodExpenseController.dispose();
     _stayExpenseController.dispose();
     super.dispose();
   }
 
   void _saveSettings(UserProfileSettings currentSettings) {
+    if (_usernameController.text.isNotEmpty) {
+      ref
+          .read(profileNotifierProvider)
+          .updateProfile(_usernameController.text.trim());
+    }
+
     final newSettings = UserProfileSettings(
       distanceUnit: _distanceUnit,
       currency: _currency,
+      themeMode: _themeMode,
+      accentColor: _accentColor,
       avgDailyFoodExpense:
           double.tryParse(_foodExpenseController.text) ??
           currentSettings.avgDailyFoodExpense,
@@ -42,6 +55,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   void _showAddVehicleDialog() {
     String type = 'car';
+    final nameController = TextEditingController();
     final seatsController = TextEditingController();
     final mileageController = TextEditingController();
     final avgDistController = TextEditingController();
@@ -71,6 +85,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     });
                   },
                   decoration: const InputDecoration(labelText: 'Vehicle Type'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vehicle Name (Optional)',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -105,6 +126,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           ElevatedButton(
             onPressed: () {
               ref.read(profileNotifierProvider).addVehicle({
+                'name': nameController.text.isNotEmpty
+                    ? nameController.text
+                    : null,
                 'type': type,
                 'seats': int.tryParse(seatsController.text) ?? 4,
                 'mileage_per_liter':
@@ -124,24 +148,38 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(profileSettingsProvider);
+    final user = ref.watch(authStateProvider).value;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile Setup')),
       body: settingsAsync.when(
         data: (settings) {
           // Initialize controllers on first load if empty
-          if (_foodExpenseController.text.isEmpty) {
+          if (_foodExpenseController.text.isEmpty && user != null) {
+            _usernameController.text = user.username;
             _foodExpenseController.text = settings.avgDailyFoodExpense
                 .toString();
             _stayExpenseController.text = settings.avgNightlyStayExpense
                 .toString();
             _distanceUnit = settings.distanceUnit;
             _currency = settings.currency;
+            _themeMode = settings.themeMode;
+            _accentColor = settings.accentColor;
           }
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              const Text(
+                'Personal Info',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(labelText: 'Username'),
+              ),
+              const SizedBox(height: 24),
               const Text(
                 'Preferences',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -166,6 +204,33 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ],
                 onChanged: (val) => setState(() => _currency = val!),
                 decoration: const InputDecoration(labelText: 'Currency'),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: _themeMode,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'system',
+                    child: Text('System Default'),
+                  ),
+                  DropdownMenuItem(value: 'light', child: Text('Light Mode')),
+                  DropdownMenuItem(value: 'dark', child: Text('Dark Mode')),
+                ],
+                onChanged: (val) => setState(() => _themeMode = val!),
+                decoration: const InputDecoration(labelText: 'Theme Mode'),
+              ),
+              const SizedBox(height: 16),
+              const Text('Accent Color', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildColorOption('deepPurple', Colors.deepPurple),
+                  _buildColorOption('blue', Colors.blue),
+                  _buildColorOption('green', Colors.green),
+                  _buildColorOption('orange', Colors.orange),
+                  _buildColorOption('red', Colors.red),
+                ],
               ),
               const SizedBox(height: 16),
               TextField(
@@ -219,7 +284,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                           : Icons.directions_car,
                     ),
                     title: Text(
-                      '${v['type'].toString().toUpperCase()} - ${v['seats']} Seats',
+                      v['name'] != null
+                          ? '${v['name']} (${v['type'].toString().toUpperCase()})'
+                          : '${v['type'].toString().toUpperCase()} - ${v['seats']} Seats',
                     ),
                     subtitle: Text(
                       'Mileage: ${v['mileage_per_liter']} | Avg/Day: ${v['avg_distance_per_day']}',
@@ -238,6 +305,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+
+  Widget _buildColorOption(String colorName, Color color) {
+    final isSelected = _accentColor == colorName;
+    return GestureDetector(
+      onTap: () => setState(() => _accentColor = colorName),
+      child: CircleAvatar(
+        backgroundColor: color,
+        radius: isSelected ? 20 : 16,
+        child: isSelected
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
+            : null,
       ),
     );
   }

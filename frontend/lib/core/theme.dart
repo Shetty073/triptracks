@@ -6,10 +6,10 @@ class TripTracksTheme {
   static const Color backgroundColor = Color(0xFFF3F4F6);
   static const Color darkBackgroundColor = Color(0xFF121212);
 
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme({Color customPrimaryColor = primaryColor}) {
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: primaryColor,
+      primaryColor: customPrimaryColor,
       scaffoldBackgroundColor: backgroundColor,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
@@ -23,7 +23,7 @@ class TripTracksTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: customPrimaryColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -44,16 +44,16 @@ class TripTracksTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
+          borderSide: BorderSide(color: customPrimaryColor, width: 2),
         ),
       ),
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData darkTheme({Color customPrimaryColor = primaryColor}) {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: primaryColor,
+      primaryColor: customPrimaryColor,
       scaffoldBackgroundColor: darkBackgroundColor,
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBackgroundColor,
@@ -62,7 +62,7 @@ class TripTracksTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: customPrimaryColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -79,5 +79,22 @@ class TripTracksTheme {
         ),
       ),
     );
+  }
+
+  static Color getColorFromName(String name) {
+    switch (name) {
+      case 'red':
+        return Colors.red;
+      case 'green':
+        return Colors.green;
+      case 'blue':
+        return Colors.blue;
+      case 'orange':
+        return Colors.orange;
+      case 'deepPurple':
+        return primaryColor;
+      default:
+        return primaryColor;
+    }
   }
 }

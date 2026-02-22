@@ -4,6 +4,7 @@ import 'package:frontend/core/theme.dart';
 import 'package:frontend/features/auth/screens/auth_screen.dart';
 import 'package:frontend/core/auth_provider.dart';
 import 'package:frontend/features/feed/screens/home_feed_screen.dart';
+import 'package:frontend/core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,12 +17,17 @@ class TripTracksApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
+    final themeState = ref.watch(themeProvider);
 
     return MaterialApp(
       title: 'TripTracks',
-      theme: TripTracksTheme.lightTheme,
-      darkTheme: TripTracksTheme.darkTheme,
-      themeMode: ThemeMode.system, // Modern apps respect system settings
+      theme: TripTracksTheme.lightTheme(
+        customPrimaryColor: themeState.accentColor,
+      ),
+      darkTheme: TripTracksTheme.darkTheme(
+        customPrimaryColor: themeState.accentColor,
+      ),
+      themeMode: themeState.themeMode,
       debugShowCheckedModeBanner: false,
       home: authState.when(
         data: (user) {

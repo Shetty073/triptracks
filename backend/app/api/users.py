@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from app.models.user import UserDB, UserProfileSettings, Vehicle
+from fastapi import APIRouter, Depends, HTTPException
+from app.models.user import UserDB, UserProfileSettings, Vehicle, UserProfileUpdate
 from app.api.auth import get_current_user
 from app.core.database import db
 
@@ -8,6 +8,19 @@ router = APIRouter()
 @router.get("/me", response_model=UserDB)
 async def get_my_profile(current_user: UserDB = Depends(get_current_user)):
     return current_user
+
+@router.put("/me/profile", response_model=UserDB)
+async def update_my_profile(profile_update: UserProfileUpdate, current_user: UserDB = Depends(get_current_user)):
+    update_data = {k: v for k, v in profile_update.dict().items() if v is not None}
+    if not update_data:
+        return current_user
+        
+    await db.db["users"].update_one(
+        {"id": current_user.id},
+        {"$set": update_data}
+    )
+    updated_user = await db.db["users"].find_one({"id": current_user.id})
+    return UserDB(**updated_user)
 
 @router.put("/me/settings", response_model=UserDB)
 async def update_my_settings(settings: UserProfileSettings, current_user: UserDB = Depends(get_current_user)):

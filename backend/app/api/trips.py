@@ -97,13 +97,18 @@ async def update_trip_status(trip_id: str, status: str, current_user: UserDB = D
     return TripDB(**updated_trip)
 
 @router.get("/feed/completed", response_model=List[TripDB])
-async def get_completed_trips_feed(current_user: UserDB = Depends(get_current_user)):
+async def get_completed_trips_feed(search: str = None, current_user: UserDB = Depends(get_current_user)):
     """Home feed showing completed trips of others"""
-    cursor = db.db["trips"].find({
-        "status": "completed"
-        # Can add filters to exclude current user's trips if desired, 
-        # but leaving open for now based on 'search and view completed trips of other users'
-    }).sort("updated_at", -1).limit(50)
+    query = {"status": "completed"}
+    
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"title": search_regex},
+            {"destination.name": search_regex}
+        ]
+        
+    cursor = db.db["trips"].find(query).sort("updated_at", -1).limit(50)
     
     trips = await cursor.to_list(length=50)
     return [TripDB(**t) for t in trips]

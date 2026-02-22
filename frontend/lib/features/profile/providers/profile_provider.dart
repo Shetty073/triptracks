@@ -6,6 +6,8 @@ import 'package:frontend/core/auth_provider.dart';
 class UserProfileSettings {
   final String distanceUnit;
   final String currency;
+  final String themeMode;
+  final String accentColor;
   final double avgDailyFoodExpense;
   final double avgNightlyStayExpense;
   final List<dynamic> vehicles;
@@ -13,6 +15,8 @@ class UserProfileSettings {
   UserProfileSettings({
     required this.distanceUnit,
     required this.currency,
+    required this.themeMode,
+    required this.accentColor,
     required this.avgDailyFoodExpense,
     required this.avgNightlyStayExpense,
     required this.vehicles,
@@ -22,6 +26,8 @@ class UserProfileSettings {
     return UserProfileSettings(
       distanceUnit: json['distance_unit'] ?? 'km',
       currency: json['currency'] ?? 'USD',
+      themeMode: json['theme_mode'] ?? 'system',
+      accentColor: json['accent_color'] ?? 'deepPurple',
       avgDailyFoodExpense: (json['avg_daily_food_expense'] ?? 0.0).toDouble(),
       avgNightlyStayExpense: (json['avg_nightly_stay_expense'] ?? 0.0)
           .toDouble(),
@@ -32,6 +38,8 @@ class UserProfileSettings {
   Map<String, dynamic> toJson() => {
     'distance_unit': distanceUnit,
     'currency': currency,
+    'theme_mode': themeMode,
+    'accent_color': accentColor,
     'avg_daily_food_expense': avgDailyFoodExpense,
     'avg_nightly_stay_expense': avgNightlyStayExpense,
     'vehicles': vehicles,
@@ -59,6 +67,13 @@ class ProfileNotifier {
   Future<void> updateSettings(UserProfileSettings settings) async {
     await dio.put('/api/users/me/settings', data: settings.toJson());
     ref.invalidate(profileSettingsProvider);
+  }
+
+  Future<void> updateProfile(String username) async {
+    await dio.put('/api/users/me/profile', data: {'username': username});
+    ref.invalidate(
+      authStateProvider,
+    ); // To refresh the current user profile including username
   }
 
   Future<void> addVehicle(Map<String, dynamic> vehicle) async {
