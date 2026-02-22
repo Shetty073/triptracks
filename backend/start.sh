@@ -5,7 +5,7 @@ set -e
 
 # Production Configuration Variables (can be overridden by environment variables)
 HOST=${HOST:-0.0.0.0}
-PORT=${PORT:-8000}
+PORT=${PORT:-8001}
 WORKERS=${WORKERS:-4}
 LOG_LEVEL=${LOG_LEVEL:-info}
 
