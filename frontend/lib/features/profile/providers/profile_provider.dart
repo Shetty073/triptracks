@@ -69,11 +69,19 @@ class ProfileNotifier {
     ref.invalidate(profileSettingsProvider);
   }
 
-  Future<void> updateProfile(String username) async {
-    await dio.put('/api/users/me/profile', data: {'username': username});
-    ref.invalidate(
-      authStateProvider,
-    ); // To refresh the current user profile including username
+  Future<void> updateProfile(String username, {String? fullName}) async {
+    final data = <String, dynamic>{'username': username};
+    if (fullName != null) data['full_name'] = fullName;
+    await dio.put('/api/users/me/profile', data: data);
+    ref.invalidate(authStateProvider);
+  }
+
+  Future<void> uploadProfilePhoto(List<int> bytes, String filename) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: filename),
+    });
+    await dio.post('/api/users/me/photo', data: formData);
+    ref.invalidate(authStateProvider);
   }
 
   Future<void> addVehicle(Map<String, dynamic> vehicle) async {

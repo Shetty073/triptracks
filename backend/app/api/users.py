@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from app.models.user import UserDB, UserProfileSettings, Vehicle, UserProfileUpdate
+import os
+import uuid
 from app.api.auth import get_current_user
 from app.core.database import db
 
@@ -19,6 +21,31 @@ async def update_my_profile(profile_update: UserProfileUpdate, current_user: Use
         {"id": current_user.id},
         {"$set": update_data}
     )
+    updated_user = await db.db["users"].find_one({"id": current_user.id})
+    return UserDB(**updated_user)
+
+@router.post("/me/photo", response_model=UserDB)
+async def upload_profile_photo(file: UploadFile = File(...), current_user: UserDB = Depends(get_current_user)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File provided is not an image.")
+    
+    # Generate unique filename
+    ext = os.path.splitext(file.filename)[1].lstrip(".")
+    filename = f"{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = os.path.join("uploads", "profiles", filename)
+    
+    # Save the file
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+        
+    # Update user record with relative URL
+    photo_url = f"/uploads/profiles/{filename}"
+    await db.db["users"].update_one(
+        {"id": current_user.id},
+        {"$set": {"profile_photo": photo_url}}
+    )
+    
     updated_user = await db.db["users"].find_one({"id": current_user.id})
     return UserDB(**updated_user)
 

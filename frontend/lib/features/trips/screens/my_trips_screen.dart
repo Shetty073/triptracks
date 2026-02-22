@@ -4,6 +4,7 @@ import 'package:frontend/features/trips/providers/trips_provider.dart';
 import 'package:frontend/shared/widgets/trip_card.dart';
 import 'package:frontend/models/trip.dart';
 import 'package:frontend/features/trip_details/screens/trip_details_screen.dart';
+import 'package:frontend/features/plan_trip/screens/plan_trip_screen.dart';
 
 class MyTripsScreen extends ConsumerWidget {
   const MyTripsScreen({super.key});
@@ -26,6 +27,16 @@ class MyTripsScreen extends ConsumerWidget {
             Tab(text: "Active (Participant)"),
             Tab(text: "Completed (Participant)"),
           ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (c) => const PlanTripScreen()),
+            );
+          },
+          icon: const Icon(Icons.add_road),
+          label: const Text('Plan a Trip'),
         ),
         body: tripsAsync.when(
           data: (categories) {

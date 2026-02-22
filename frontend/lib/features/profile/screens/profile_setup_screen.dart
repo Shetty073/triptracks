@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:frontend/features/profile/providers/profile_provider.dart';
 import 'package:frontend/core/auth_provider.dart';
+import 'package:frontend/core/constants.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -12,16 +14,19 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _usernameController = TextEditingController();
+  final _fullNameController = TextEditingController();
   final _foodExpenseController = TextEditingController();
   final _stayExpenseController = TextEditingController();
   String _distanceUnit = 'km';
   String _currency = 'USD';
   String _themeMode = 'system';
   String _accentColor = 'deepPurple';
+  bool _uploading = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _fullNameController.dispose();
     _foodExpenseController.dispose();
     _stayExpenseController.dispose();
     super.dispose();
@@ -31,7 +36,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     if (_usernameController.text.isNotEmpty) {
       ref
           .read(profileNotifierProvider)
-          .updateProfile(_usernameController.text.trim());
+          .updateProfile(
+            _usernameController.text.trim(),
+            fullName: _fullNameController.text.trim().isNotEmpty
+                ? _fullNameController.text.trim()
+                : null,
+          );
     }
 
     final newSettings = UserProfileSettings(
@@ -51,6 +61,36 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Settings Saved!')));
+  }
+
+  Future<void> _pickAndUploadPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final filename = picked.name;
+      await ref
+          .read(profileNotifierProvider)
+          .uploadProfilePhoto(bytes, filename);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile photo updated!')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   void _showAddVehicleDialog() {
@@ -157,6 +197,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           // Initialize controllers on first load if empty
           if (_foodExpenseController.text.isEmpty && user != null) {
             _usernameController.text = user.username;
+            _fullNameController.text = user.fullName ?? '';
             _foodExpenseController.text = settings.avgDailyFoodExpense
                 .toString();
             _stayExpenseController.text = settings.avgNightlyStayExpense
@@ -170,16 +211,79 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // --- Profile Photo ---
+              Center(
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 52,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.15),
+                      backgroundImage: user?.profilePhoto != null
+                          ? NetworkImage(
+                              '${AppConstants.apiBaseUrl}${user!.profilePhoto}',
+                            )
+                          : null,
+                      child: (user?.profilePhoto == null)
+                          ? Icon(
+                              Icons.person,
+                              size: 56,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                    if (_uploading)
+                      const Positioned.fill(
+                        child: CircleAvatar(
+                          radius: 52,
+                          backgroundColor: Colors.black38,
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                      ),
+                    GestureDetector(
+                      onTap: _uploading ? null : _pickAndUploadPhoto,
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // --- Personal Info ---
               const Text(
                 'Personal Info',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TextField(
+                controller: _fullNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  hintText: 'First and last name',
+                  prefixIcon: Icon(Icons.badge_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.alternate_email),
+                ),
               ),
               const SizedBox(height: 24),
+
+              // --- Preferences ---
               const Text(
                 'Preferences',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

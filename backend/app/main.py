@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import os
 from contextlib import asynccontextmanager
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.api import auth, users, crew, trips
@@ -29,6 +31,10 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(crew.router, prefix="/api/crew", tags=["crew"])
 app.include_router(trips.router, prefix="/api/trips", tags=["trips"])
 app.include_router(chat.router, prefix="/ws/trips", tags=["websockets"])
+
+# Ensure the uploads directory exists before mounting
+os.makedirs("uploads/profiles", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 async def root():

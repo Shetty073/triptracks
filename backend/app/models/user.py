@@ -23,9 +23,13 @@ class UserProfileSettings(BaseModel):
 class UserBase(BaseModel):
     email: EmailStr
     username: str
+    full_name: Optional[str] = None
+    profile_photo: Optional[str] = None
 
 class UserProfileUpdate(BaseModel):
     username: Optional[str] = None
+    full_name: Optional[str] = None
+    profile_photo: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
