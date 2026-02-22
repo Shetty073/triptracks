@@ -58,15 +58,33 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   }
 }
 
-class _PublicFeedWidget extends ConsumerWidget {
+class _PublicFeedWidget extends ConsumerStatefulWidget {
   const _PublicFeedWidget();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final feedAsync = ref.watch(publicFeedProvider);
-    final searchController = TextEditingController(
+  ConsumerState<_PublicFeedWidget> createState() => _PublicFeedWidgetState();
+}
+
+class _PublicFeedWidgetState extends ConsumerState<_PublicFeedWidget> {
+  late final TextEditingController searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    searchController = TextEditingController(
       text: ref.read(feedSearchQueryProvider),
     );
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final feedAsync = ref.watch(publicFeedProvider);
 
     return Column(
       children: [

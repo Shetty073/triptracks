@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from app.models.trip import TripDB, TripCreate, Location, Expense
 from app.models.user import UserDB
 from app.api.auth import get_current_user
@@ -99,7 +99,7 @@ async def update_trip_status(trip_id: str, status: str, current_user: UserDB = D
 @router.get("/feed/completed", response_model=List[TripDB])
 async def get_completed_trips_feed(search: Optional[str] = None, current_user: UserDB = Depends(get_current_user)):
     """Home feed showing completed trips of others"""
-    query: dict = {"status": "completed"}
+    query: Dict[str, Any] = {"status": "completed"}
     
     if search:
         search_regex = {"$regex": search, "$options": "i"}
