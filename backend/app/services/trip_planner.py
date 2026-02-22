@@ -1,23 +1,19 @@
 import json
-from pymemcache.client.base import Client
-from app.core.config import settings
+from app.services.cache import cache_service
 from typing import List, Dict
 import math
 from app.models.trip import Location, Leg
 
-# Initialize memcached
-cache = Client((settings.MEMCACHED_SERVER.split(':')[0], int(settings.MEMCACHED_SERVER.split(':')[1])))
-
 # Try importing and initializing geomaps_sdk
 try:
     from geomaps_sdk.maps_sdk import LocationClient, GeoapifyProvider, GeoPoint
-    # Initialize with key if present, else None
+    from app.core.config import settings
     if settings.GEOMAPS_API_KEY:
         provider = GeoapifyProvider(api_key=settings.GEOMAPS_API_KEY)
         maps_client = LocationClient(provider=provider)
     else:
         maps_client = None
-except ImportError:
+except (ImportError, Exception):
     maps_client = None
 
 
@@ -37,17 +33,16 @@ class TripPlannerService:
 
     @staticmethod
     def get_autocomplete(query: str) -> List[Dict]:
-        cache_key = f"autocomplete_{query.replace(' ', '_')}".encode('utf-8')
-        cached = cache.get(cache_key)
-        if cached:
-            return json.loads(cached.decode('utf-8'))
-            
+        cache_key = f"autocomplete_{query.replace(' ', '_')}"
+        cached = cache_service.get(cache_key)
+        if cached is not None:
+            return cached
+
         results = []
         if maps_client:
             try:
                 api_results = maps_client.autocomplete(query, limit=5)
                 for res in api_results:
-                    # Construct dict from AutocompleteResult
                     results.append({
                         "name": res.formatted_address or res.address.city or "Unknown",
                         "lat": res.location.latitude,
@@ -55,26 +50,24 @@ class TripPlannerService:
                     })
             except Exception as e:
                 print(f"Geomaps SDK error: {e}")
-                
+
         # If no client or error, return dummy data to keep app working
         if not results:
             results = [
                 {"name": f"{query} City", "lat": 40.7128, "lng": -74.0060},
                 {"name": f"{query} Town", "lat": 34.0522, "lng": -118.2437}
             ]
-            
-        # Cache for 1 hour
-        cache.set(cache_key, json.dumps(results).encode('utf-8'), expire=3600)
+
+        cache_service.set(cache_key, results, ttl=3600)  # cache for 1 hour
         return results
 
     @staticmethod
     def calculate_leg(src: Location, dest: Location) -> Leg:
-        cache_key = f"route_{src.lat}_{src.lng}_{dest.lat}_{dest.lng}".encode('utf-8')
-        cached = cache.get(cache_key)
-        if cached:
-            data = json.loads(cached.decode('utf-8'))
-            return Leg(**data)
-            
+        cache_key = f"route_{src.lat}_{src.lng}_{dest.lat}_{dest.lng}"
+        cached = cache_service.get(cache_key)
+        if cached is not None:
+            return Leg(**cached)
+
         leg = None
         if maps_client:
             try:
@@ -84,13 +77,13 @@ class TripPlannerService:
                 leg = Leg(distance_km=route.distance_km, estimated_time_mins=int(route.duration_minutes))
             except Exception as e:
                 print(f"Geomaps Route Error: {e}")
-                
+
         if not leg:
-            # Fallback to haversine distance and assume 60km/h
+            # Fallback to haversine distance and assume 60km/h avg speed
             dist_km = TripPlannerService._haversine(src.lat, src.lng, dest.lat, dest.lng)
             leg = Leg(distance_km=round(dist_km, 2), estimated_time_mins=int((dist_km / 60) * 60))
-            
-        cache.set(cache_key, json.dumps(leg.dict()).encode('utf-8'), expire=3600)
+
+        cache_service.set(cache_key, leg.dict(), ttl=3600)  # cache for 1 hour
         return leg
 
     @staticmethod
@@ -99,23 +92,22 @@ class TripPlannerService:
         legs = []
         total_dist = 0.0
         total_time = 0
-        
+
         for i in range(len(points) - 1):
-            leg = TripPlannerService.calculate_leg(points[i], points[i+1])
+            leg = TripPlannerService.calculate_leg(points[i], points[i + 1])
             legs.append(leg)
             total_dist += leg.distance_km
             total_time += leg.estimated_time_mins
-            
-        # Basic logic: avg_daily_dist represents how much they drive a day
-        # Calculate days needed
+
+        # Calculate days needed based on avg daily driving distance
         days_needed = math.ceil(total_dist / avg_daily_dist) if avg_daily_dist > 0 else 1
-        
-        # Suggest additional stops if any segment is longer than daily limit
+
+        # Suggest additional stops for segments longer than daily limit
         suggested_stops = []
         for i, leg in enumerate(legs):
             if leg.distance_km > avg_daily_dist:
                 suggested_stops.append({
-                    "segment": f"between {points[i].name} and {points[i+1].name}",
+                    "segment": f"between {points[i].name} and {points[i + 1].name}",
                     "distance": leg.distance_km,
                     "reason": "Exceeds your comfortable daily driving limit"
                 })

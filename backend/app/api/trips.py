@@ -11,6 +11,8 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+# ─── SPECIFIC / LITERAL ROUTES (must come before wildcard /{trip_id}) ───────
+
 @router.post("/", response_model=TripDB)
 async def create_trip(trip: TripCreate, current_user: UserDB = Depends(get_current_user)):
     trip_db = TripDB(
@@ -21,20 +23,6 @@ async def create_trip(trip: TripCreate, current_user: UserDB = Depends(get_curre
     )
     await db.db["trips"].insert_one(trip_db.dict())
     return trip_db
-
-@router.get("/{trip_id}", response_model=TripDB)
-async def get_trip(trip_id: str, current_user: UserDB = Depends(get_current_user)):
-    trip_data = await db.db["trips"].find_one({"id": trip_id})
-    if not trip_data:
-        raise HTTPException(status_code=404, detail="Trip not found")
-        
-    # Anyone can view completed trips (implied from requirements), otherwise only participants
-    if trip_data["status"] != "completed":
-        participant_ids = [p["user_id"] for p in trip_data.get("participants", [])]
-        if current_user.id != trip_data["organizer_id"] and current_user.id not in participant_ids:
-            raise HTTPException(status_code=403, detail="Not authorized to view this active trip")
-            
-    return TripDB(**trip_data)
 
 @router.get("/user/categories")
 async def get_user_trips(current_user: UserDB = Depends(get_current_user)):
@@ -76,6 +64,63 @@ async def get_user_trips(current_user: UserDB = Depends(get_current_user)):
                 
     return categorized
 
+@router.get("/feed/completed", response_model=List[TripDB])
+async def get_completed_trips_feed(search: Optional[str] = None, current_user: UserDB = Depends(get_current_user)):
+    """Home feed showing completed trips of others"""
+    query: Dict[str, Any] = {"status": "completed"}
+    
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"title": search_regex},
+            {"destination.name": search_regex}
+        ]
+        
+    cursor = db.db["trips"].find(query).sort("updated_at", -1).limit(50)
+    
+    trips = await cursor.to_list(length=50)
+    return [TripDB(**t) for t in trips]
+
+@router.get("/autocomplete")
+async def autocomplete_location(query: str, current_user: UserDB = Depends(get_current_user)):
+    return TripPlannerService.get_autocomplete(query)
+
+class PlanRequest(BaseModel):
+    source: Location
+    destination: Location
+    stops: List[Location] = []
+
+@router.post("/intelligence/plan")
+async def generate_trip_plan(req: PlanRequest, current_user: UserDB = Depends(get_current_user)):
+    # Calculate vehicle distance capabilities
+    avg_daily = 500.0  # Default fallback
+    if current_user.profile_settings.vehicles:
+        avg_daily = current_user.profile_settings.vehicles[0].avg_distance_per_day
+        
+    plan = TripPlannerService.calculate_trip_itinerary(
+        source=req.source, 
+        destination=req.destination, 
+        stops=req.stops, 
+        avg_daily_dist=avg_daily
+    )
+    return plan
+
+# ─── WILDCARD ROUTES (must come AFTER all literal routes) ────────────────────
+
+@router.get("/{trip_id}", response_model=TripDB)
+async def get_trip(trip_id: str, current_user: UserDB = Depends(get_current_user)):
+    trip_data = await db.db["trips"].find_one({"id": trip_id})
+    if not trip_data:
+        raise HTTPException(status_code=404, detail="Trip not found")
+        
+    # Anyone can view completed trips, otherwise only participants
+    if trip_data["status"] != "completed":
+        participant_ids = [p["user_id"] for p in trip_data.get("participants", [])]
+        if current_user.id != trip_data["organizer_id"] and current_user.id not in participant_ids:
+            raise HTTPException(status_code=403, detail="Not authorized to view this active trip")
+            
+    return TripDB(**trip_data)
+
 @router.put("/{trip_id}/status")
 async def update_trip_status(trip_id: str, status: str, current_user: UserDB = Depends(get_current_user)):
     if status not in ["planned", "in_progress", "completed"]:
@@ -95,48 +140,6 @@ async def update_trip_status(trip_id: str, status: str, current_user: UserDB = D
     
     updated_trip = await db.db["trips"].find_one({"id": trip_id})
     return TripDB(**updated_trip)
-
-@router.get("/feed/completed", response_model=List[TripDB])
-async def get_completed_trips_feed(search: Optional[str] = None, current_user: UserDB = Depends(get_current_user)):
-    """Home feed showing completed trips of others"""
-    query: Dict[str, Any] = {"status": "completed"}
-    
-    if search:
-        search_regex = {"$regex": search, "$options": "i"}
-        query["$or"] = [
-            {"title": search_regex},
-            {"destination.name": search_regex}
-        ]
-        
-    cursor = db.db["trips"].find(query).sort("updated_at", -1).limit(50)
-    
-    trips = await cursor.to_list(length=50)
-    return [TripDB(**t) for t in trips]
-
-class PlanRequest(BaseModel):
-    source: Location
-    destination: Location
-    stops: List[Location] = []
-    
-@router.get("/autocomplete")
-async def autocomplete_location(query: str, current_user: UserDB = Depends(get_current_user)):
-    return TripPlannerService.get_autocomplete(query)
-
-@router.post("/intelligence/plan")
-async def generate_trip_plan(req: PlanRequest, current_user: UserDB = Depends(get_current_user)):
-    # Calculate vehicle distance capabilities
-    avg_daily = 500.0 # Default fallback
-    if current_user.profile_settings.vehicles:
-        # Just use the first vehicle's capability for simplicity here, or average it
-        avg_daily = current_user.profile_settings.vehicles[0].avg_distance_per_day
-        
-    plan = TripPlannerService.calculate_trip_itinerary(
-        source=req.source, 
-        destination=req.destination, 
-        stops=req.stops, 
-        avg_daily_dist=avg_daily
-    )
-    return plan
 
 @router.post("/{trip_id}/expenses", response_model=Expense)
 async def add_expense(trip_id: str, expense: Expense, current_user: UserDB = Depends(get_current_user)):
