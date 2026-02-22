@@ -36,3 +36,4 @@ frontend/ios/Flutter/flutter_assets/
 frontend/ios/Flutter/flutter_export_environment.sh
 frontend/ios/ServiceDefinitions.json
 frontend/ios/Runner/GeneratedPluginRegistrant.*
+backend/uploads/*
