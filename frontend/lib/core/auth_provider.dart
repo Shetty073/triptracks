@@ -32,12 +32,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String usernameOrEmail, String password) async {
     state = const AsyncValue.loading();
     try {
       final response = await _dio.post(
         '/api/auth/login',
-        data: {'username': username, 'password': password},
+        data: {'username': usernameOrEmail, 'password': password},
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
       await _storage.write(
@@ -55,12 +55,41 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
-  Future<void> register(String email, String username, String password) async {
+  /// Sends a mock OTP to the given email (OTP is always 123456 in dev).
+  Future<void> sendOtp(String email) async {
+    await _dio.post('/api/auth/otp/send', data: {'email': email});
+  }
+
+  /// Verifies the OTP for the given email. Throws on failure.
+  Future<void> verifyOtp(String email, String otp) async {
+    final response = await _dio.post(
+      '/api/auth/otp/verify',
+      data: {'email': email, 'otp': otp},
+    );
+    if (response.data['verified'] != true) {
+      throw Exception('Invalid OTP. Please try again.');
+    }
+  }
+
+  /// Registers a new user. OTP must have been verified beforehand.
+  Future<void> register({
+    required String email,
+    required String username,
+    required String password,
+    required String serviceCode,
+    String? fullName,
+  }) async {
     state = const AsyncValue.loading();
     try {
       await _dio.post(
         '/api/auth/register',
-        data: {'email': email, 'username': username, 'password': password},
+        data: {
+          'email': email,
+          'username': username,
+          'password': password,
+          'service_code': serviceCode,
+          if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
+        },
       );
       await login(username, password);
     } catch (e, st) {

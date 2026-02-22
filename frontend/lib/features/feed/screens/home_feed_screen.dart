@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/auth_provider.dart';
+import 'package:frontend/core/debouncer.dart';
 import 'package:frontend/features/profile/screens/profile_setup_screen.dart';
 import 'package:frontend/features/feed/providers/feed_provider.dart';
 import 'package:frontend/shared/widgets/trip_card.dart';
@@ -67,6 +68,7 @@ class _PublicFeedWidget extends ConsumerStatefulWidget {
 
 class _PublicFeedWidgetState extends ConsumerState<_PublicFeedWidget> {
   late final TextEditingController searchController;
+  final _debouncer = Debouncer();
 
   @override
   void initState() {
@@ -79,6 +81,7 @@ class _PublicFeedWidgetState extends ConsumerState<_PublicFeedWidget> {
   @override
   void dispose() {
     searchController.dispose();
+    _debouncer.dispose();
     super.dispose();
   }
 
@@ -106,8 +109,10 @@ class _PublicFeedWidgetState extends ConsumerState<_PublicFeedWidget> {
                 },
               ),
             ),
-            onSubmitted: (value) {
-              ref.read(feedSearchQueryProvider.notifier).updateQuery(value);
+            onChanged: (value) {
+              _debouncer.run(() {
+                ref.read(feedSearchQueryProvider.notifier).updateQuery(value);
+              });
             },
           ),
         ),

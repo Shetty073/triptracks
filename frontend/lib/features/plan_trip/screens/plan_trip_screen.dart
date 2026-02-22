@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/debouncer.dart';
 import 'package:frontend/features/plan_trip/providers/plan_trip_provider.dart';
 
 class PlanTripScreen extends ConsumerStatefulWidget {
@@ -258,11 +259,20 @@ class _PlanTripScreenState extends ConsumerState<PlanTripScreen> {
 
 class _LocationSearchDelegate extends SearchDelegate<LocationSuggestion?> {
   final WidgetRef ref;
+  final _debouncer = Debouncer();
+  final _debouncedQuery = ValueNotifier<String>('');
+
   _LocationSearchDelegate(this.ref);
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
-    IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        query = '';
+        _debouncedQuery.value = '';
+      },
+    ),
   ];
 
   @override
@@ -272,32 +282,40 @@ class _LocationSearchDelegate extends SearchDelegate<LocationSuggestion?> {
   );
 
   @override
-  Widget buildResults(BuildContext context) => _buildSuggestions(context);
+  Widget buildResults(BuildContext context) {
+    _debouncedQuery.value = query;
+    return _buildSuggestions();
+  }
 
   @override
-  Widget buildSuggestions(BuildContext context) => _buildSuggestions(context);
+  Widget buildSuggestions(BuildContext context) {
+    // Debounce: update the notifier 400ms after the user stops typing
+    _debouncer.run(() => _debouncedQuery.value = query);
+    return _buildSuggestions();
+  }
 
-  Widget _buildSuggestions(BuildContext context) {
-    if (query.isEmpty) {
-      return const Center(child: Text('Type to search locations'));
-    }
-
-    return FutureBuilder<List<LocationSuggestion>>(
-      future: ref.read(planTripProvider).fetchAutocomplete(query),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+  Widget _buildSuggestions() {
+    return ValueListenableBuilder<String>(
+      valueListenable: _debouncedQuery,
+      builder: (context, debouncedQ, _) {
+        if (debouncedQ.isEmpty) {
+          return const Center(child: Text('Type to search locations'));
         }
-        final results = snapshot.data ?? [];
-        if (results.isEmpty) return const Center(child: Text('No results'));
-
-        return ListView.builder(
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              leading: const Icon(Icons.location_city),
-              title: Text(results[index].name),
-              onTap: () => close(context, results[index]),
+        return FutureBuilder<List<LocationSuggestion>>(
+          future: ref.read(planTripProvider).fetchAutocomplete(debouncedQ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final results = snapshot.data ?? [];
+            if (results.isEmpty) return const Center(child: Text('No results'));
+            return ListView.builder(
+              itemCount: results.length,
+              itemBuilder: (context, index) => ListTile(
+                leading: const Icon(Icons.location_city),
+                title: Text(results[index].name),
+                onTap: () => close(context, results[index]),
+              ),
             );
           },
         );
