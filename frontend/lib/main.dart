@@ -30,9 +30,8 @@ class TripTracksApp extends ConsumerWidget {
           }
           return const AuthScreen();
         },
-        loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
         error: (e, s) => const AuthScreen(),
       ),
     );

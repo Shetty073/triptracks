@@ -3,7 +3,11 @@ class TripParticipant {
   final bool isDriver;
   final String role;
 
-  TripParticipant({required this.userId, required this.isDriver, required this.role});
+  TripParticipant({
+    required this.userId,
+    required this.isDriver,
+    required this.role,
+  });
 
   factory TripParticipant.fromJson(Map<String, dynamic> json) {
     return TripParticipant(
@@ -105,9 +109,21 @@ class Trip {
       totalEstimatedTimeMins: json['total_estimated_time_mins'] ?? 0,
       source: json['source'] ?? {},
       destination: json['destination'] ?? {},
-      participants: (json['participants'] as List?)?.map((e) => TripParticipant.fromJson(e)).toList() ?? [],
-      expenses: (json['expenses'] as List?)?.map((e) => Expense.fromJson(e)).toList() ?? [],
-      comments: (json['comments'] as List?)?.map((e) => TripComment.fromJson(e)).toList() ?? [],
+      participants:
+          (json['participants'] as List?)
+              ?.map((e) => TripParticipant.fromJson(e))
+              .toList() ??
+          [],
+      expenses:
+          (json['expenses'] as List?)
+              ?.map((e) => Expense.fromJson(e))
+              .toList() ??
+          [],
+      comments:
+          (json['comments'] as List?)
+              ?.map((e) => TripComment.fromJson(e))
+              .toList() ??
+          [],
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }

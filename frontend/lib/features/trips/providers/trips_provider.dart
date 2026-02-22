@@ -17,10 +17,18 @@ class CategorizedTrips {
 
   factory CategorizedTrips.fromJson(Map<String, dynamic> json) {
     return CategorizedTrips(
-      plannedByMe: (json['planned_by_me'] as List).map((t) => Trip.fromJson(t)).toList(),
-      completedByMe: (json['completed_by_me'] as List).map((t) => Trip.fromJson(t)).toList(),
-      participantActive: (json['participant_active'] as List).map((t) => Trip.fromJson(t)).toList(),
-      participantCompleted: (json['participant_completed'] as List).map((t) => Trip.fromJson(t)).toList(),
+      plannedByMe: (json['planned_by_me'] as List)
+          .map((t) => Trip.fromJson(t))
+          .toList(),
+      completedByMe: (json['completed_by_me'] as List)
+          .map((t) => Trip.fromJson(t))
+          .toList(),
+      participantActive: (json['participant_active'] as List)
+          .map((t) => Trip.fromJson(t))
+          .toList(),
+      participantCompleted: (json['participant_completed'] as List)
+          .map((t) => Trip.fromJson(t))
+          .toList(),
     );
   }
 }

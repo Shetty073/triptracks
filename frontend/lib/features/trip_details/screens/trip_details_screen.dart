@@ -42,7 +42,7 @@ class _TripDetailsView extends ConsumerWidget {
             width: double.infinity,
             child: TripMapWidget(trip: trip),
           ),
-          
+
           const TabBar(
             isScrollable: true,
             labelColor: Colors.deepPurple,
@@ -54,7 +54,7 @@ class _TripDetailsView extends ConsumerWidget {
               Tab(text: "Comments"),
             ],
           ),
-          
+
           Expanded(
             child: TabBarView(
               children: [
@@ -64,9 +64,9 @@ class _TripDetailsView extends ConsumerWidget {
                 CommentsTab(trip: trip),
               ],
             ),
-          )
+          ),
         ],
-      )
+      ),
     );
   }
 }
@@ -80,8 +80,16 @@ class _InfoTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(trip.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        Text('Status: ${trip.status.toUpperCase()}', style: TextStyle(color: trip.status == 'in_progress' ? Colors.green : Colors.grey)),
+        Text(
+          trip.title,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          'Status: ${trip.status.toUpperCase()}',
+          style: TextStyle(
+            color: trip.status == 'in_progress' ? Colors.green : Colors.grey,
+          ),
+        ),
         const SizedBox(height: 16),
         ListTile(
           title: Text(trip.source['name'] ?? 'Source'),
@@ -95,17 +103,22 @@ class _InfoTab extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text('Distance: ${trip.totalDistanceKm} km'),
-        Text('Est. Time: ${(trip.totalEstimatedTimeMins/60).toStringAsFixed(1)} hours'),
-        
+        Text(
+          'Est. Time: ${(trip.totalEstimatedTimeMins / 60).toStringAsFixed(1)} hours',
+        ),
+
         const SizedBox(height: 24),
         if (trip.status == 'planned')
           ElevatedButton(
-            onPressed: () => ref.read(tripActionProvider).updateStatus(trip.id, 'in_progress'),
+            onPressed: () => ref
+                .read(tripActionProvider)
+                .updateStatus(trip.id, 'in_progress'),
             child: const Text('Start Trip'),
           ),
         if (trip.status == 'in_progress')
           ElevatedButton(
-            onPressed: () => ref.read(tripActionProvider).updateStatus(trip.id, 'completed'),
+            onPressed: () =>
+                ref.read(tripActionProvider).updateStatus(trip.id, 'completed'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Complete Trip'),
           ),

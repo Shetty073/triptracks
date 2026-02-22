@@ -11,7 +11,6 @@ final authStateProvider = AsyncNotifierProvider<AuthNotifier, User?>(() {
 });
 
 class AuthNotifier extends AsyncNotifier<User?> {
-  
   Dio get _dio => ref.read(dioProvider);
 
   @override
@@ -41,15 +40,21 @@ class AuthNotifier extends AsyncNotifier<User?> {
         data: {'username': username, 'password': password},
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
-      await _storage.write(key: 'access_token', value: response.data['access_token']);
-      await _storage.write(key: 'refresh_token', value: response.data['refresh_token']);
+      await _storage.write(
+        key: 'access_token',
+        value: response.data['access_token'],
+      );
+      await _storage.write(
+        key: 'refresh_token',
+        value: response.data['refresh_token'],
+      );
       final user = await _loadUser();
       state = AsyncValue.data(user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
-  
+
   Future<void> register(String email, String username, String password) async {
     state = const AsyncValue.loading();
     try {

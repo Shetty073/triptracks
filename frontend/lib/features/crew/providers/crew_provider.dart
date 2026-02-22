@@ -8,7 +8,12 @@ class CrewRequest {
   final String receiverId;
   final String status;
 
-  CrewRequest({required this.id, required this.senderId, required this.receiverId, required this.status});
+  CrewRequest({
+    required this.id,
+    required this.senderId,
+    required this.receiverId,
+    required this.status,
+  });
 
   factory CrewRequest.fromJson(Map<String, dynamic> json) {
     return CrewRequest(
@@ -20,10 +25,16 @@ class CrewRequest {
   }
 }
 
-final searchCrewProvider = FutureProvider.family<List<User>, String>((ref, query) async {
+final searchCrewProvider = FutureProvider.family<List<User>, String>((
+  ref,
+  query,
+) async {
   if (query.isEmpty) return [];
   final dio = ref.watch(dioProvider);
-  final response = await dio.get('/api/crew/search', queryParameters: {'query': query});
+  final response = await dio.get(
+    '/api/crew/search',
+    queryParameters: {'query': query},
+  );
   return (response.data as List).map((u) => User.fromJson(u)).toList();
 });
 

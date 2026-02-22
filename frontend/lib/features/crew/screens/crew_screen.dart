@@ -63,7 +63,10 @@ class _MyCrewList extends ConsumerWidget {
     final crewAsync = ref.watch(myCrewProvider);
     return crewAsync.when(
       data: (crew) {
-        if (crew.isEmpty) return const Center(child: Text('No crew members yet. Search to add friends!'));
+        if (crew.isEmpty)
+          return const Center(
+            child: Text('No crew members yet. Search to add friends!'),
+          );
         return ListView.builder(
           itemCount: crew.length,
           itemBuilder: (context, index) {
@@ -88,16 +91,20 @@ class _PendingRequestsList extends ConsumerWidget {
     final reqsAsync = ref.watch(pendingRequestsProvider);
     return reqsAsync.when(
       data: (reqs) {
-        if (reqs.isEmpty) return const Center(child: Text('No pending requests'));
+        if (reqs.isEmpty)
+          return const Center(child: Text('No pending requests'));
         return ListView.builder(
           itemCount: reqs.length,
           itemBuilder: (context, index) {
             final req = reqs[index];
             return ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person_add)),
-              title: Text('Request from User ID: ${req.senderId}'), // Real app would join with user table to show name
+              title: Text(
+                'Request from User ID: ${req.senderId}',
+              ), // Real app would join with user table to show name
               trailing: ElevatedButton(
-                onPressed: () => ref.read(crewNotifierProvider).acceptRequest(req.id),
+                onPressed: () =>
+                    ref.read(crewNotifierProvider).acceptRequest(req.id),
                 child: const Text('Accept'),
               ),
             );
@@ -115,7 +122,11 @@ class _SearchCrew extends ConsumerWidget {
   final String query;
   final Function(String) onSearch;
 
-  const _SearchCrew({required this.controller, required this.query, required this.onSearch});
+  const _SearchCrew({
+    required this.controller,
+    required this.query,
+    required this.onSearch,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -155,12 +166,18 @@ class _SearchCrew extends ConsumerWidget {
                       child: const Text('Add'),
                       onPressed: () async {
                         try {
-                          await ref.read(crewNotifierProvider).sendRequest(user.id);
+                          await ref
+                              .read(crewNotifierProvider)
+                              .sendRequest(user.id);
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Sent!')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Request Sent!')),
+                          );
                         } catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
                         }
                       },
                     ),

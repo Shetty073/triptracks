@@ -23,7 +23,8 @@ class UserProfileSettings {
       distanceUnit: json['distance_unit'] ?? 'km',
       currency: json['currency'] ?? 'USD',
       avgDailyFoodExpense: (json['avg_daily_food_expense'] ?? 0.0).toDouble(),
-      avgNightlyStayExpense: (json['avg_nightly_stay_expense'] ?? 0.0).toDouble(),
+      avgNightlyStayExpense: (json['avg_nightly_stay_expense'] ?? 0.0)
+          .toDouble(),
       vehicles: json['vehicles'] ?? [],
     );
   }
@@ -37,11 +38,13 @@ class UserProfileSettings {
   };
 }
 
-final profileSettingsProvider = FutureProvider<UserProfileSettings>((ref) async {
+final profileSettingsProvider = FutureProvider<UserProfileSettings>((
+  ref,
+) async {
   final dio = ref.watch(dioProvider);
   // Ensure user is loaded first
-  final _ = ref.watch(authStateProvider); 
-  
+  final _ = ref.watch(authStateProvider);
+
   final response = await dio.get('/api/users/me');
   final settingsJson = response.data['profile_settings'] ?? {};
   return UserProfileSettings.fromJson(settingsJson);

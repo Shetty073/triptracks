@@ -17,17 +17,17 @@ class HomeFeedScreen extends ConsumerStatefulWidget {
 
 class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
   int _currentIndex = 0;
-  
+
   // Dynamic screen resolution in build to allow rebuild with Providers if needed
   // Alternatively we can just build the widget tree directly in the body based on index
-  
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      const _PublicFeedWidget(),                  // Feed
-      const MyTripsScreen(),                      // My Trips
-      const CrewScreen(),                         // Crew Screen
-      const ProfileSetupScreen(),                 // Profile screen
+      const _PublicFeedWidget(), // Feed
+      const MyTripsScreen(), // My Trips
+      const CrewScreen(), // Crew Screen
+      const ProfileSetupScreen(), // Profile screen
     ];
 
     return Scaffold(
@@ -67,7 +67,9 @@ class _PublicFeedWidget extends ConsumerWidget {
     return feedAsync.when(
       data: (trips) {
         if (trips.isEmpty) {
-          return const Center(child: Text("No public trips found. Plan one today!"));
+          return const Center(
+            child: Text("No public trips found. Plan one today!"),
+          );
         }
         return RefreshIndicator(
           onRefresh: () async => ref.refresh(publicFeedProvider),
@@ -77,8 +79,14 @@ class _PublicFeedWidget extends ConsumerWidget {
               return TripCard(
                 trip: trips[index],
                 onViewMore: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (c) => TripDetailsScreen(tripId: trips[index].id)));
-                }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (c) =>
+                          TripDetailsScreen(tripId: trips[index].id),
+                    ),
+                  );
+                },
               );
             },
           ),

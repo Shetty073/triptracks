@@ -31,10 +31,22 @@ class MyTripsScreen extends ConsumerWidget {
           data: (categories) {
             return TabBarView(
               children: [
-                _TripList(trips: categories.plannedByMe, label: "You haven't planned any trips yet"),
-                _TripList(trips: categories.completedByMe, label: "You have no completed trips"),
-                _TripList(trips: categories.participantActive, label: "You are not participating in active trips"),
-                _TripList(trips: categories.participantCompleted, label: "No completed trips as participant"),
+                _TripList(
+                  trips: categories.plannedByMe,
+                  label: "You haven't planned any trips yet",
+                ),
+                _TripList(
+                  trips: categories.completedByMe,
+                  label: "You have no completed trips",
+                ),
+                _TripList(
+                  trips: categories.participantActive,
+                  label: "You are not participating in active trips",
+                ),
+                _TripList(
+                  trips: categories.participantCompleted,
+                  label: "No completed trips as participant",
+                ),
               ],
             );
           },
@@ -61,7 +73,10 @@ class _TripList extends StatelessWidget {
           children: [
             const Icon(Icons.mode_of_travel, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+            ),
           ],
         ),
       );
@@ -72,7 +87,12 @@ class _TripList extends StatelessWidget {
         return TripCard(
           trip: trips[index],
           onViewMore: () {
-             Navigator.push(context, MaterialPageRoute(builder: (c) => TripDetailsScreen(tripId: trips[index].id)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (c) => TripDetailsScreen(tripId: trips[index].id),
+              ),
+            );
           },
         );
       },

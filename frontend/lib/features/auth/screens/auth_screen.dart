@@ -25,12 +25,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void _submit() {
     if (_isLogin) {
-      ref.read(authStateProvider.notifier).login(
-            _usernameController.text,
-            _passwordController.text,
-          );
+      ref
+          .read(authStateProvider.notifier)
+          .login(_usernameController.text, _passwordController.text);
     } else {
-      ref.read(authStateProvider.notifier).register(
+      ref
+          .read(authStateProvider.notifier)
+          .register(
             _emailController.text,
             _usernameController.text,
             _passwordController.text,
@@ -55,7 +56,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               Text(
                 _isLogin ? 'Welcome Back!' : 'Join TripTracks',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 32),
               if (!_isLogin) ...[
@@ -95,9 +99,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => setState(() => _isLogin = !_isLogin),
-                child: Text(_isLogin
-                    ? 'Don\'t have an account? Sign Up'
-                    : 'Already have an account? Login'),
+                child: Text(
+                  _isLogin
+                      ? 'Don\'t have an account? Sign Up'
+                      : 'Already have an account? Login',
+                ),
               ),
             ],
           ),

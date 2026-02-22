@@ -6,7 +6,11 @@ class LocationSuggestion {
   final double lat;
   final double lng;
 
-  LocationSuggestion({required this.name, required this.lat, required this.lng});
+  LocationSuggestion({
+    required this.name,
+    required this.lat,
+    required this.lng,
+  });
 
   factory LocationSuggestion.fromJson(Map<String, dynamic> json) {
     return LocationSuggestion(
@@ -15,12 +19,8 @@ class LocationSuggestion {
       lng: (json['lng'] as num).toDouble(),
     );
   }
-  
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'lat': lat,
-    'lng': lng,
-  };
+
+  Map<String, dynamic> toJson() => {'name': name, 'lat': lat, 'lng': lng};
 }
 
 class PlanTripNotifier {
@@ -30,11 +30,16 @@ class PlanTripNotifier {
 
   Future<List<LocationSuggestion>> fetchAutocomplete(String query) async {
     if (query.isEmpty) return [];
-    
+
     final dio = ref.read(dioProvider);
     try {
-      final response = await dio.get('/api/trips/autocomplete', queryParameters: {'query': query});
-      return (response.data as List).map((e) => LocationSuggestion.fromJson(e)).toList();
+      final response = await dio.get(
+        '/api/trips/autocomplete',
+        queryParameters: {'query': query},
+      );
+      return (response.data as List)
+          .map((e) => LocationSuggestion.fromJson(e))
+          .toList();
     } catch (e) {
       // Handle error gracefully
       return [];

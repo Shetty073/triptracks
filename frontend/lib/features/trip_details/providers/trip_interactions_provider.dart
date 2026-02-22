@@ -6,7 +6,11 @@ class TripInteractionsNotifier {
   final Ref ref;
   TripInteractionsNotifier(this.ref);
 
-  Future<void> addExpense(String tripId, String description, double amount) async {
+  Future<void> addExpense(
+    String tripId,
+    String description,
+    double amount,
+  ) async {
     final dio = ref.read(dioProvider);
     await dio.post(
       '/api/trips/$tripId/expenses',
@@ -21,12 +25,11 @@ class TripInteractionsNotifier {
 
   Future<void> addComment(String tripId, String text) async {
     final dio = ref.read(dioProvider);
-    await dio.post(
-      '/api/trips/$tripId/comments',
-      data: {'text': text},
-    );
+    await dio.post('/api/trips/$tripId/comments', data: {'text': text});
     ref.invalidate(tripDetailsProvider(tripId));
   }
 }
 
-final tripInteractionsProvider = Provider((ref) => TripInteractionsNotifier(ref));
+final tripInteractionsProvider = Provider(
+  (ref) => TripInteractionsNotifier(ref),
+);
