@@ -63,10 +63,11 @@ class _MyCrewList extends ConsumerWidget {
     final crewAsync = ref.watch(myCrewProvider);
     return crewAsync.when(
       data: (crew) {
-        if (crew.isEmpty)
+        if (crew.isEmpty) {
           return const Center(
             child: Text('No crew members yet. Search to add friends!'),
           );
+        }
         return ListView.builder(
           itemCount: crew.length,
           itemBuilder: (context, index) {
@@ -91,8 +92,9 @@ class _PendingRequestsList extends ConsumerWidget {
     final reqsAsync = ref.watch(pendingRequestsProvider);
     return reqsAsync.when(
       data: (reqs) {
-        if (reqs.isEmpty)
+        if (reqs.isEmpty) {
           return const Center(child: Text('No pending requests'));
+        }
         return ListView.builder(
           itemCount: reqs.length,
           itemBuilder: (context, index) {

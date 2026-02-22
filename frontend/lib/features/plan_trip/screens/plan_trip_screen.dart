@@ -278,8 +278,9 @@ class _LocationSearchDelegate extends SearchDelegate<LocationSuggestion?> {
   Widget buildSuggestions(BuildContext context) => _buildSuggestions(context);
 
   Widget _buildSuggestions(BuildContext context) {
-    if (query.isEmpty)
+    if (query.isEmpty) {
       return const Center(child: Text('Type to search locations'));
+    }
 
     return FutureBuilder<List<LocationSuggestion>>(
       future: ref.read(planTripProvider).fetchAutocomplete(query),
