@@ -101,9 +101,10 @@ class _PendingRequestsList extends ConsumerWidget {
             final req = reqs[index];
             return ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person_add)),
-              title: Text(
-                'Request from User ID: ${req.senderId}',
-              ), // Real app would join with user table to show name
+              title: Text(req.senderEmail),
+              subtitle: req.senderFullName != null && req.senderFullName!.isNotEmpty
+                  ? Text(req.senderFullName!)
+                  : null,
               trailing: ElevatedButton(
                 onPressed: () =>
                     ref.read(crewNotifierProvider).acceptRequest(req.id),

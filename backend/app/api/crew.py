@@ -69,7 +69,15 @@ async def get_pending_requests(current_user: UserDB = Depends(get_current_user))
         "status": "pending"
     })
     requests = await cursor.to_list(length=100)
-    return requests
+
+    # Enrich each request with sender's display info
+    enriched = []
+    for req in requests:
+        sender = await db.db["users"].find_one({"id": req["sender_id"]})
+        req["sender_email"] = sender["email"] if sender else req["sender_id"]
+        req["sender_full_name"] = sender.get("full_name") if sender else None
+        enriched.append(req)
+    return enriched
 
 @router.post("/requests/{request_id}/accept")
 async def accept_request(request_id: str, current_user: UserDB = Depends(get_current_user)):

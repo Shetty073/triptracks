@@ -7,12 +7,16 @@ class CrewRequest {
   final String senderId;
   final String receiverId;
   final String status;
+  final String senderEmail;
+  final String? senderFullName;
 
   CrewRequest({
     required this.id,
     required this.senderId,
     required this.receiverId,
     required this.status,
+    required this.senderEmail,
+    this.senderFullName,
   });
 
   factory CrewRequest.fromJson(Map<String, dynamic> json) {
@@ -21,6 +25,8 @@ class CrewRequest {
       senderId: json['sender_id'],
       receiverId: json['receiver_id'],
       status: json['status'],
+      senderEmail: json['sender_email'] ?? json['sender_id'],
+      senderFullName: json['sender_full_name'],
     );
   }
 }
